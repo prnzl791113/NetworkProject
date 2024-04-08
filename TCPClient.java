@@ -1,37 +1,42 @@
 import java.io.*;
 import java.net.*;
-class TCPClient {
+import java.util.Random;
 
-    public static void main(String argv[]) throws Exception
-    {
-        String sentence;
-        String modifiedSentence;
-        System.out.println("Client is running: " );
+public class TCPClient {
+    public static void main(String[] args) throws Exception {
+        try (Socket socket = new Socket("localhost", 6789);
+             BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+             DataOutputStream outToServer = new DataOutputStream(socket.getOutputStream());
+             BufferedReader inFromServer = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-        Socket clientSocket = new Socket("127.0.0.1", 6789);
+            System.out.print("Enter your name: ");
+            String name = inFromUser.readLine();
 
-        BufferedReader inFromUser =
-          new BufferedReader(new InputStreamReader(System.in));
+            // Joining the server
+            outToServer.writeBytes("JOIN:" + name + '\n');
+            System.out.println("Server response: " + inFromServer.readLine());
 
-        BufferedReader inFromServer =
-                new BufferedReader(new
-                InputStreamReader(clientSocket.getInputStream()));
+            // Sending 3 math calculation requests
+            for (int i = 0; i < 3; i++) {
+                String calculation = generateRandomCalculation();
+                System.out.println("Sending calculation: " + calculation);
+                outToServer.writeBytes(calculation + '\n');
+                System.out.println("Server response: " + inFromServer.readLine());
+            }
 
-        DataOutputStream outToServer =
-          new DataOutputStream(clientSocket.getOutputStream());
+            // Terminating the connection
+            outToServer.writeBytes("QUIT\n");
+            System.out.println("Server response: " + inFromServer.readLine());
+        }
+    }
 
-
-
-            sentence = inFromUser.readLine();
-
-
-            outToServer.writeBytes(sentence + '\n');
-
-            modifiedSentence = inFromServer.readLine();
-
-            System.out.println("FROM SERVER: " + modifiedSentence);
-
-            clientSocket.close();
-
-          }
-      }
+    private static String generateRandomCalculation() {
+        Random random = new Random();
+        int operand1 = random.nextInt(20) + 1; // 1 to 20
+        int operand2 = random.nextInt(20) + 1; // 1 to 20
+        String[] operations = {"ADD", "SUB", "MUL", "DIV"};
+        String operation = operations[random.nextInt(operations.length)];
+        
+        return "CALC:" + operation + ":" + operand1 + ":" + operand2;
+    }
+}
