@@ -20,7 +20,7 @@ public class TCPClient {
             for (int i = 0; i < 3; i++) {
                 String calculation = generateRandomCalculation();
                 System.out.println("Sending calculation: " + calculation);
-                outToServer.writeBytes(calculation + '\n');
+                outToServer.writeBytes("CALC:" + calculation + '\n');
                 System.out.println("Server response: " + inFromServer.readLine());
             }
 
@@ -34,9 +34,9 @@ public class TCPClient {
         Random random = new Random();
         int operand1 = random.nextInt(20) + 1; // 1 to 20
         int operand2 = random.nextInt(20) + 1; // 1 to 20
-        String[] operations = {"ADD", "SUB", "MUL", "DIV"};
-        String operation = operations[random.nextInt(operations.length)];
+        char[] operations = {'+', '-', '*', '/'};
+        char operation = operations[random.nextInt(operations.length)];
         
-        return "CALC:" + operation + ":" + operand1 + ":" + operand2;
+        return operand1 + "" + operation + "" + operand2;
     }
 }
