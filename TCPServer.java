@@ -29,10 +29,10 @@ class ClientHandler implements Runnable {
                     logActivity(clientName, "joined");
                     outToClient.writeBytes("ACK:" + clientName + "\n");
                 } else if (line.startsWith("CALC:")) {
-                    String[] parts = line.split(":");
-                    String result = handleCalculation(parts[1], Double.parseDouble(parts[2]), Double.parseDouble(parts[3]));
+                    String equation = line.substring(5);
+                    String result = handleCalculation(equation);
                     outToClient.writeBytes("RESULT:" + result + "\n");
-                    logActivity(parts[1], "calculation requested");
+                    logActivity(equation, "calculation requested");
                 } else if (line.equals("QUIT")) {
                     outToClient.writeBytes("BYE\n");
                     break;
@@ -44,25 +44,30 @@ class ClientHandler implements Runnable {
         }
     }
 
-    private void logActivity(String clientName, String activity) {
-        // Log client activity in a format that includes timestamp
-        System.out.println("Client " + clientName + " " + activity + " at " + LocalDateTime.now());
+    private void logActivity(String message, String activity) {
+        System.out.println("Activity: " + message + ", " + activity + " at " + LocalDateTime.now());
     }
 
-    private String handleCalculation(String operation, double num1, double num2) {
-        switch (operation) {
-            case "ADD":
-                return String.valueOf(num1 + num2);
-            case "SUB":
-                return String.valueOf(num1 - num2);
-            case "MUL":
-                return String.valueOf(num1 * num2);
-            case "DIV":
-                if (num2 == 0) return "Error: Division by zero";
-                return String.valueOf(num1 / num2);
-            default:
-                return "Error: Invalid operation";
+    private String handleCalculation(String equation) {
+        try {
+            for (int i = 0; i < equation.length(); i++) {
+                if (!Character.isDigit(equation.charAt(i))) {
+                    int num1 = Integer.parseInt(equation.substring(0, i));
+                    int num2 = Integer.parseInt(equation.substring(i + 1));
+                    char op = equation.charAt(i);
+                    switch (op) {
+                        case '+': return String.valueOf(num1 + num2);
+                        case '-': return String.valueOf(num1 - num2);
+                        case '*': return String.valueOf(num1 * num2);
+                        case '/': return num2 == 0 ? "Error: Division by zero" : String.valueOf(num1 / num2);
+                    }
+                    break;
+                }
+            }
+        } catch (NumberFormatException e) {
+            return "Error: Invalid number format.";
         }
+        return "Error: Invalid operation";
     }
 }
 
